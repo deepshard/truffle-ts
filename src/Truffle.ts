@@ -1,5 +1,5 @@
 // truffle.ts
-import { Finetune, FinetunePayload, InferencePayload, TruffleResource } from './types';
+import { Finetune, FinetunePayload, InferencePayload, TruffleResource, BatchInferencePayload } from './types';
 import { ImageHandler } from './helpers/ImageHandler'
 import { FileHandler } from './helpers/FileHandler';
 import assert from 'assert';
@@ -94,10 +94,17 @@ export class Truffle {
         return finetune
     }
 
-    /**
-     * Allows a model to generate a response through the server
-     * @param param0 The inference payload
-     * @returns A promise that resolves to the inference object
+      /**
+     * Allows a model to generate multiple responses through the server
+     * @param {object} payload - Batch inference payload.
+     * @param {string} payload.model - The model to use, defaults to "truffle-13b".
+     * @param {string} payload.prompt - The prompts to use.
+     * @param {number} payload.temperature - The temperature setting, defaults to 0.25.
+     * @param {number} payload.tokens - The number of tokens to use, defaults to 512.
+     * @param {string} payload.stop - The stop sequence, defaults to "###".
+     * @param {boolean} payload.stream - Whether to stream the results, defaults to false.
+     * @param {string} payload.image - The image to use.
+     * @returns A promise that resolves to the inference object.
      */
     async infer({
         model = "truffle-13b",
@@ -124,5 +131,50 @@ export class Truffle {
             images: [image],
         };
         return await RequestHandler.getInstance().infer(data, stream, this.apiKey)
-    }    
+    }   
+    
+     /**
+     * Allows a model to generate multiple responses through the server
+     * @param {object} payload - Batch inference payload.
+     * @param {string} payload.model - The model to use, defaults to "truffle-13b".
+     * @param {string[]} payload.prompts - The prompts to use.
+     * @param {number} payload.temperature - The temperature setting, defaults to 0.25.
+     * @param {number} payload.tokens - The number of tokens to use, defaults to 512.
+     * @param {string} payload.stop - The stop sequence, defaults to "###".
+     * @param {boolean} payload.stream - Whether to stream the results, defaults to false.
+     * @param {string[]} payload.images - The images to use.
+     * @returns A promise that resolves to an array of inferences object
+     */
+     async batchInfer({
+        model = "truffle-13b",
+        prompts,
+        temperature = 0.25,
+        tokens = 512,
+        stop = "###",
+        stream = false,
+        images
+    }: BatchInferencePayload): Promise<any> {
+        assert(
+            model == "truffle-13b",
+            "truffle is the only model string that we've got, buddy."
+        )
+      
+        const inferences = await Promise.all(prompts.map(async (prompt, index) =>
+        RequestHandler.getInstance().post(
+          "/infer",
+          {
+            model:model,
+            prompt: prompt,
+            temperature: temperature,
+            tokens:tokens,
+            stop: stop,
+            stream:stream,
+            image: images && images[index] ? await this.imageHandler.convertImageToBase64(images[index]) : undefined
+          },
+          this.apiKey
+        )
+      ))
+    
+      return inferences
+    }
 }

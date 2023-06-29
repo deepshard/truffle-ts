@@ -75,6 +75,19 @@ export type InferencePayload = {
 }
 
 /**
+ * The payload for conducting batch model inference
+ */
+export type BatchInferencePayload = {
+    model: string;
+    prompts: string[];
+    temperature?: number;
+    tokens?: number;
+    stop?: string | string[];
+    stream?: boolean;
+    images?: string[];
+}
+
+/**
  * The payload for conducting model finetuning
  */
 export type FinetunePayload = {
