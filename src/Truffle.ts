@@ -96,7 +96,7 @@ export class Truffle {
 
       /**
      * Allows a model to generate multiple responses through the server
-     * @param {object} payload - Batch inference payload.
+     * @param {object} payload -  Inference payload.
      * @param {string} payload.model - The model to use, defaults to "truffle-13b".
      * @param {string} payload.prompt - The prompts to use.
      * @param {number} payload.temperature - The temperature setting, defaults to 0.25.
